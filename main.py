@@ -3,7 +3,10 @@ import motor.motor_asyncio
 
 app = FastAPI()
 db = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017").torqatadb
-netflix_collection = db.get_collection("netflix_data")
+imdb_collection = db.get_collection("imdb_shows")
 
-from db import router
-app.include_router(router)
+import crud
+import aggregation
+
+app.include_router(crud.router)
+app.include_router(aggregation.router)
