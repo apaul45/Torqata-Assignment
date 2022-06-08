@@ -8,27 +8,6 @@ router = APIRouter(
     tags=["aggregation-routes"]
 )
 
-def match_stage(attr: str, operator: str, value):
-    return  {
-        "$match": {
-            attr: {
-                operator: value
-            }
-        }
-    }
-
-def average_rating_stage(attr: str, group:str):
-    return {
-        "$group": {
-            "_id": {
-                attr: group
-            },
-            "average": {
-                "$avg": "$rating"
-            }
-        }
-    }
-
 async def get_result(stage_list):
     shows = await imdb_collection.aggregate(stage_list).to_list(length=None)
     result = []
@@ -39,25 +18,38 @@ async def get_result(stage_list):
         result.append(show)
     return result
 
-#This request returns the average rating for a certain type of show with a certain number of votes
-@router.get("/rating/type/{votes}")
-async def type_vote_rating(type: str, votes: int, user = Depends(get_current_user)):
-    movie_type = '$' + type
-    show_match_votes = match_stage("votes", "$gte", votes)
-    show_group_type = average_rating_stage("$type", movie_type)
-    return await get_result([show_match_votes, show_group_type])
+async def type_query_helper(query_type: str, query_operation: object, id: Optional[str] = None):
+    match_stage = {
+        "$match": {
+            query_type: query_operation
+        }
+    }
+    group_id = {
+        "$type": '$' + id
+    } if id else "$type"
+    
+    group_stage = {
+        "$group": {
+            "_id": group_id,
+            "average": {
+                "$avg": "$rating"
+            }
+        }
+    }
+    return await get_result([match_stage])
 
-#This request returns the average rating of a certain type of show in a specific year
-@router.get("/rating/type/{year}")
-async def type_year_rating(type: str, year: int, user = Depends(get_current_user)):
-    movie_type = '$' + type
-    show_match_votes = match_stage("year", "$eq", year)
-    show_group = average_rating_stage('$type', movie_type)
-    return await get_result([show_match_votes, show_group])
+#This request returns the average rating for either a certain type of show  or every show with a certain number of votes
+@router.get("/rating/type/{votes}", response_description="Returns the average rating for a certain type of show with a certain number of votes")
+async def type_vote_rating(votes: int, type: Optional[str] = None, user = Depends(get_current_user)):
+    return await type_query_helper("votes", {"$gte": votes}, type)
 
-#This request returns the average runtime and ratings of shows in either a given year
-#Or all years
-@router.get("/yearly")
+#This request returns the average rating of either a certain type of show or every show in a specific year
+@router.get("/rating/type/{year}", response_description="Returns the average rating for either a certain type of shows or every show in a given year")
+async def type_year_rating(year: int, type: Optional[str] = None, user = Depends(get_current_user)):
+    return await type_query_helper("year", {"$eq": year}, type)
+
+#This request returns the average runtime and ratings of shows in either a given year or all years in a sorted list
+@router.get("/yearly", response_description="Returns average runtime and ratings for each year or a given year")
 async def year_statistics(year: Optional[int] = None, user = Depends(get_current_user)): 
     yr = {
         "$year": '$' + str(year)
@@ -74,4 +66,28 @@ async def year_statistics(year: Optional[int] = None, user = Depends(get_current
             }
         }
     }
-    return await get_result([show_group])
+    sort_groups = {
+        "$sort": {
+            "_id": 1
+        }
+    }
+    return await get_result([show_group, sort_groups])
+
+@router.get("/rating/{director}")
+async def director_statistics(director: str, user = Depends(get_current_user)):
+    match_director = {
+        "$match": {
+            "directors": {
+                "$eq": director
+            }
+        }
+    }
+    group_stage = {
+        "$group": {
+            "_id": "$title",
+            "averageRating": {
+                "$avg": "$rating"
+            }
+        }
+    }
+    return await get_result([match_director, group_stage])

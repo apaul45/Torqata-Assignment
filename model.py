@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class Shows(BaseModel):
     show_id: str
@@ -10,10 +10,10 @@ class Shows(BaseModel):
     rating: float
     runtime: int
     year: int
-    genres: str
+    genres: List[str]
     votes: int
     date: str
-    directors: str
+    directors: List[str]
 
 class UpdateShowModel(BaseModel):
     show_id: Optional[str]
