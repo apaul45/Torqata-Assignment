@@ -12,7 +12,6 @@ router = APIRouter(
 @router.get("/shows")
 async def get_all_shows():
     #Use {_id: 0} to ignore the _id field when requesting: this is to prevent issues regarding ObjectIds in MongoDB
-    print(pwd_context.hash("password123"))
     shows = await imdb_collection.find({},{'_id': 0}).to_list(length=None)
     return shows
 

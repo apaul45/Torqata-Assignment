@@ -6,8 +6,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-import os
-from dotenv import load_dotenv
+# import os
+# from dotenv import load_dotenv
 
 router = APIRouter(
     tags=["users"]
@@ -21,9 +21,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 #Creating/encoding a JWT using the secret from .env file
-load_dotenv()
-secret_key = os.getenv('JWT_SECRET')
-algorithm = "HS256"
+# load_dotenv()
+# secret_key = os.getenv('JWT_SECRET')
+# algorithm = "HS256"
+
+secret_key = "fb72281bc24af8f5b3fc50a006169f80af6608c29aa64af1411129d96ec2ac85"
 
 class User(BaseModel):
     username: str
