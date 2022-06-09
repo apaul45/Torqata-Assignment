@@ -13,3 +13,7 @@ import user
 app.include_router(crud.router)
 app.include_router(aggregation.router)
 app.include_router(user.router)
+
+@app.get("/")
+def root():
+    return {"msg": "Welcome to my backend api!"}

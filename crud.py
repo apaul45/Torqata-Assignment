@@ -9,7 +9,7 @@ router = APIRouter(
     tags=["crud-routes"]
 )
 
-@router.get("/")
+@router.get("/shows")
 async def get_all_shows():
     #Use {_id: 0} to ignore the _id field when requesting: this is to prevent issues regarding ObjectIds in MongoDB
     print(pwd_context.hash("password123"))
