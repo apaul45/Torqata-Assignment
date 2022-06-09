@@ -23,8 +23,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 #Creating/encoding a JWT using the secret from .env file
 # load_dotenv()
 # secret_key = os.getenv('JWT_SECRET')
-# algorithm = "HS256"
-
+algorithm = "HS256"
 secret_key = "fb72281bc24af8f5b3fc50a006169f80af6608c29aa64af1411129d96ec2ac85"
 
 class User(BaseModel):

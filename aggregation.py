@@ -36,7 +36,7 @@ async def type_query_helper(query_type: str, query_operation: object, id: Option
             }
         }
     }
-    return await get_result([match_stage])
+    return await get_result([match_stage, group_stage])
 
 #This request returns the average rating for either a certain type of show  or every show with a certain number of votes
 @router.get("/rating/type/{votes}", response_description="Returns the average rating for a certain type of show with a certain number of votes")

@@ -2,8 +2,7 @@ from model import Shows, UpdateShowModel
 from fastapi.encoders import jsonable_encoder
 from fastapi import APIRouter, Depends, HTTPException, Body
 from main import imdb_collection
-from user import get_current_user, pwd_context
-
+from user import get_current_user
 
 router = APIRouter(
     tags=["crud-routes"]
