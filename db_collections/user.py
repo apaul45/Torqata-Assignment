@@ -1,6 +1,8 @@
 #This is a basic authentication system that only supports login at the moment
 
 from fastapi import Depends, APIRouter, HTTPException
+import sys
+sys.path.insert(0,"..")
 from main import user_collection
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel

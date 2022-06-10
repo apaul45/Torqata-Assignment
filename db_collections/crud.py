@@ -1,12 +1,41 @@
-from model import Shows, UpdateShowModel
+from pydantic import BaseModel
+from typing import Optional, List
 from fastapi.encoders import jsonable_encoder
 from fastapi import APIRouter, Depends, HTTPException, Body
 from main import imdb_collection
-from user import get_current_user
+from db_collections.user import get_current_user
 
 router = APIRouter(
     tags=["crud-routes"]
 )
+
+class Shows(BaseModel):
+    show_id: str
+    position: int
+    title: str
+    url: str
+    type: str
+    rating: float
+    runtime: int
+    year: int
+    genres: List[str]
+    votes: int
+    date: str
+    directors: List[str]
+
+class UpdateShowModel(BaseModel):
+    show_id: Optional[str]
+    title: Optional[str]
+    type: Optional[str]
+    position: Optional[int]
+    country: Optional[str]
+    url: Optional[str]
+    year: Optional[int]
+    rating: Optional[int]
+    runtime: Optional[int]
+    votes: Optional[int]
+    date: Optional[str]
+    genres: Optional[str]
 
 @router.get("/shows")
 async def get_all_shows():
@@ -28,9 +57,10 @@ async def delete_show(show_id: str, user = Depends(get_current_user)):
         return {"msg" : "Show has been successfully deleted!"}
     raise HTTPException(status_code = 404, detail="This show could not be deleted")
 
-#TODO: Revisit later to include error handling and potentially returning the updated list
 @router.put("/{show_id}")
 async def update_show(show_id: str, show: UpdateShowModel = Body(...), user = Depends(get_current_user)):
     show = {k: v for k, v in show.dict().items() if v is not None} #Needed to remove missing fields
-    updated_show = await imdb_collection.update_one({"show_id": show_id}, {"$set": show})
-    return {"msg": "Show successfully updated!"}
+    if len(show) > 0: 
+        updated_show = await imdb_collection.update_one({"show_id": show_id}, {"$set": show})
+        return {"msg": "Show successfully updated!"}
+    return {"msg": "Please input a updated show"}
