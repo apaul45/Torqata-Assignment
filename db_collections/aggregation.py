@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 import sys
 sys.path.insert(0,"..")
 from main import imdb_collection
-from pprint import pprint
 from typing import Optional
 from db_collections.user import get_current_user
 
@@ -14,14 +13,14 @@ async def get_result(stage_list):
     shows = await imdb_collection.aggregate(stage_list).to_list(length=None)
     result = []
     for show in shows: 
-        pprint(show)
         if show["_id"] == None or show["_id"] == "missing":
             del show["_id"]
         result.append(show)
     return result
 
 async def type_query_helper(query_type: str, query_operation: object, show_type: Optional[str] = None):
-    #If there is a specified type, filter it in the match stage
+    #Use the match stage to filter out documents that satisfy the passed in query operation
+    #Include a type query in the match stage if a type is specified; else group by type in group stage
     match_stage = {
         "$match": {
             query_type: query_operation
@@ -32,7 +31,7 @@ async def type_query_helper(query_type: str, query_operation: object, show_type:
             "type": show_type
         }
     }
-    #Group the matched documents by type if no specific type given, else don't include group filter at all
+    #Group the matched documents by type if no specific type given, else return the average rating of this type
     group_stage = {
         "$group": {
             "_id": "$type" if not show_type else None,
@@ -62,11 +61,12 @@ async def year_statistics(year: Optional[int] = None, user = Depends(get_current
                 "$eq": year
             }
         }
-    } if year else None #Only include match stage if specific year passed in
+    } if year else None #Use match stage to filter out documents w/specific year if passed in
 
+    #Group documents by year if no specific year given, else calculate the stats for this group only
     show_group = {
         "$group": {
-            "_id": "$year" if not match_stage else None, #Only specify an id if grouping together all years
+            "_id": "$year" if not match_stage else None, 
             "averageRating": {
                 "$avg": "$runtime"
             },
@@ -77,7 +77,7 @@ async def year_statistics(year: Optional[int] = None, user = Depends(get_current
     }
     sort_groups = {
         "$sort": {
-            "_id": 1
+            "_id": 1 #Sort in asc ordr
         }
     }
 
