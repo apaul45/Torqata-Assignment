@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 app = FastAPI()
 
-db = AsyncIOMotorClient("mongodb+srv://apaul45:password123apaul@cluster0.qr58u.mongodb.net/?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE").torqatadb
+db = AsyncIOMotorClient("mongodb://localhost:27017").torqatadb
 imdb_collection = db.get_collection("imdb_shows")
 user_collection = db.get_collection("users")
 
