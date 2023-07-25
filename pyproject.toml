@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["Ayon Paul < ayon.paul@stonybrook.edu>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "0.68.2"
+uvicorn = "0.17.4"
+motor = "2.5.1"
+gunicorn = "20.0.4"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+dnspython = "^2.4.0"
+python-multipart = "^0.0.6"
+
+[tool.poetry.scripts]
+serve = "src.commands:serve"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
