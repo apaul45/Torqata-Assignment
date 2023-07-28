@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
+import os
+from dotenv import load_dotenv
+
 app = FastAPI()
 
-db = AsyncIOMotorClient(
-    "mongodb+srv://apaul45:password123apaul@cluster0.qr58u.mongodb.net/?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
-).torqatadb
-imdb_collection = db.get_collection("imdb_shows")
-user_collection = db.get_collection("users")
+load_dotenv()
+mongo_connection = os.getenv("MONGO_CONNECTION")
+
+
+db = AsyncIOMotorClient(mongo_connection).torqatadb
 
 
 @app.get("/")
@@ -15,8 +18,8 @@ def root():
     return {"msg": "Welcome to my backend"}
 
 
-from db_collections import crud, aggregation, user
+from shows import routes as shows
+from user import routes as user
 
-app.include_router(crud.router)
-app.include_router(aggregation.router)
+app.include_router(shows.router)
 app.include_router(user.router)
