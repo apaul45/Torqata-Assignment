@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi_sqlalchemy import DBSessionMiddleware, db
 from motor.motor_asyncio import AsyncIOMotorClient
 
 import os
@@ -11,6 +12,7 @@ mongo_connection = os.getenv("MONGO_CONNECTION")
 
 
 db = AsyncIOMotorClient(mongo_connection).torqatadb
+app.add_middleware(DBSessionMiddleware, db_url=os.getenv("POSTGRES_CONNECTION"))
 
 
 @app.get("/")

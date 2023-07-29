@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from models import PyObjectId
+from models.mongodb import PyObjectId
 
 
 class Show(BaseModel):
@@ -18,6 +18,9 @@ class Show(BaseModel):
     date: str
     directors: List[str]
 
+    class Config:
+        orm_mode = True
+
 
 class UpdateShowModel(BaseModel):
     show_id: Optional[str]
@@ -32,3 +35,6 @@ class UpdateShowModel(BaseModel):
     votes: Optional[int]
     date: Optional[str]
     genres: Optional[str]
+
+    class Config:
+        orm_mode = True
