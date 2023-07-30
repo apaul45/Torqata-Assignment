@@ -62,10 +62,8 @@ class ShowService(BaseShowService):
             cls.rating_column,
         ]
 
-        stmt = select(cols).where(Show.year == year)
-
-        if not year:
-            stmt = select(cols).group_by(Show.year)
+        condition = Show.year == year if year else Show.year != None
+        stmt = select(cols).where(condition).group_by(Show.year)
 
         rows = db.session.execute(stmt).all()
         return rows
