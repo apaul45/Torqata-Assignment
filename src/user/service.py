@@ -1,19 +1,21 @@
-from pydantic import BaseModel
-from main import db
+from sqlmodel import select
+from user.models import User, UserService
+from fastapi_sqlalchemy import db as pgdb
+from main import db as mdb
 
 
-class User(BaseModel):
-    username: str
-    email: str
-    passwordHash: str
+class SQLUserService(UserService):
+    @classmethod
+    async def get_user(cls, username: str):
+        user = pgdb.session.execute(
+            select(User).where(User.username == username)
+        ).first()
+
+        return dict(user._asdict()["User"])
 
 
-class Token(BaseModel):
-    access_token: str
-
-
-class UserService:
-    driver = db.get_collection("users")
+class MongoUserService(UserService):
+    driver = mdb.get_collection("users")
 
     @classmethod
     async def get_user(cls, username: str):

@@ -24,4 +24,4 @@ class User(Base):
     __tablename__ = "user"
     email = Column(String, primary_key=True)
     username = Column(String)
-    password_hash = Column(String)
+    passwordHash = Column(String)
