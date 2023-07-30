@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi.encoders import jsonable_encoder
 from fastapi import APIRouter, Depends, HTTPException, Body
 from user.routes import get_current_user
-from shows.service import ShowService
+from shows.services.mongodb import ShowService
 from shows.models import Show, UpdateShowModel
 
 router = APIRouter(tags=["shows"])

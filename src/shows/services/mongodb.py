@@ -1,8 +1,8 @@
 from main import db
-from shows.models import Show, UpdateShowModel
+from shows.models import Show, UpdateShowModel, BaseShowService
 
 
-class ShowService:
+class ShowService(BaseShowService):
     driver = db.get_collection("imdb_shows")
 
     @classmethod
