@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
-from pydantic import BaseModel, Field
 from typing import Optional, List
+
+from pydantic import BaseModel
 from models.mongodb import PyObjectId
+from sqlmodel import Field, SQLModel
 
 
-class Show(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    show_id: str
+class Shows(SQLModel, table=True):
+    show_id: Optional[str] = Field(default=None, primary_key=True)
     position: int
     title: str
     url: str
@@ -18,9 +19,6 @@ class Show(BaseModel):
     votes: int
     date: str
     directors: List[str]
-
-    class Config:
-        orm_mode = True
 
 
 class UpdateShowModel(BaseModel):
@@ -37,9 +35,6 @@ class UpdateShowModel(BaseModel):
     date: Optional[str]
     genres: Optional[str]
 
-    class Config:
-        orm_mode = True
-
 
 class BaseShowService(ABC):
     @classmethod
@@ -49,7 +44,7 @@ class BaseShowService(ABC):
 
     @classmethod
     @abstractmethod
-    def create_show(cls, show: Show):
+    def create_show(cls, show: Shows):
         pass
 
     @classmethod

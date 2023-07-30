@@ -1,7 +1,6 @@
-from sqlalchemy import delete, select, func
-from shows.models import Show as PydanticShow, UpdateShowModel, BaseShowService
+from sqlalchemy import delete, select, func, update
+from shows.models import Shows as Show, UpdateShowModel, BaseShowService
 from fastapi_sqlalchemy import db
-from models.pgsql import Show
 
 
 class ShowService(BaseShowService):
@@ -9,38 +8,54 @@ class ShowService(BaseShowService):
     runtime_column = func.avg(Show.runtime).label("averageRuntime")
 
     @classmethod
-    def get_all_shows():
+    async def get_all_shows(cls):
         rows = db.session.execute(select(Show))
-        rows = [row["Show"] for row in rows]
+        rows = [row["Shows"] for row in rows]
         return rows
 
     @classmethod
-    def create_show(show: PydanticShow):
+    async def create_show(cls, show: Show):
         db.session.add(show)
+        db.session.commit()
+
+        return show.show_id if show in db.session else None
 
     @classmethod
-    def delete_show(cls, show_id: str):
+    async def delete_show(cls, show_id: str) -> bool:
         stmt = delete(Show).where(Show.show_id == show_id)
 
         db.session.execute(stmt)
         db.session.commit()
 
+        return not db.session.execute(
+            select(Show).where(Show.show_id == show_id)
+        ).first()
+
     @classmethod
-    def update_show(cls, show_id: str, show: UpdateShowModel):
-        pass
+    async def update_show(cls, show_id: str, show: UpdateShowModel):
+        stmt = update(Show).where(Show.show_id == show_id).values(show)
+
+        db.session.execute(stmt)
+        db.session.commit()
 
     ## Aggregation Queries
 
     @classmethod
-    def get_year_show_rating(cls, year: int, show_type: str = None):
+    async def get_year_show_rating(cls, year: int, show_type: str = None):
         type_condition = Show.type == show_type if show_type else Show.type.is_not(None)
-        stmt = select(cls.rating_column).where(Show.year == year).where(type_condition)
 
-        row = db.session.execute(stmt).first()
+        stmt = (
+            select(cls.rating_column, Show.type)
+            .where(Show.year == year)
+            .where(type_condition)
+            .group_by(Show.type)
+        )
+
+        row = db.session.execute(stmt).all()
         return row
 
     @classmethod
-    def get_year_statistics(cls, year: int = None):
+    async def get_year_statistics(cls, year: int = None):
         cols = [
             Show.year,
             cls.runtime_column,
@@ -56,11 +71,11 @@ class ShowService(BaseShowService):
         return rows
 
     @classmethod
-    def get_director_or_genre_statistics(cls, type: str, value):
+    async def get_director_or_genre_statistics(cls, type: str, value):
         stmt = f"""
           SELECT avg(rating) AS rating, avg(runtime) AS runtime
           FROM shows
-          WHERE {type} @> ARRAY[{value}]::varchar[]
+          WHERE {type} @> ARRAY['{value}']::varchar[]
         """
 
         row = db.session.execute(stmt).first()

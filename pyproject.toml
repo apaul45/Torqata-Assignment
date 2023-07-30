@@ -18,6 +18,7 @@ python-dotenv = "^1.0.0"
 fastapi-sqlalchemy = "^0.2.1"
 alembic = "^1.11.1"
 psycopg2 = "^2.9.6"
+sqlmodel = "^0.0.8"
 
 [tool.poetry.scripts]
 serve = "src.commands:serve"
