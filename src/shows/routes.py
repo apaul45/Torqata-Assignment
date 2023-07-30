@@ -1,9 +1,8 @@
-from typing import Optional
-from fastapi.encoders import jsonable_encoder
+from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Body
 from user.routes import get_current_user
-from shows.service import ShowService
-from shows.models import Show, UpdateShowModel
+from shows.services.postgres import ShowService
+from shows.models import Shows as Show, UpdateShowModel
 
 router = APIRouter(tags=["shows"])
 
@@ -14,20 +13,21 @@ async def get_all_shows(service: ShowService = Depends(ShowService)):
     return shows
 
 
-@router.post("/show", response_model=Show)
+@router.post("/show", response_model=Union[Show, str])
 async def create_show(
     show: Show,
     user=Depends(get_current_user),
     service: ShowService = Depends(ShowService),
 ):
-    show = jsonable_encoder(
-        show
-    )  # As this show is received as a JSON string, it must be decoded into a python dict first
+    created_show = await service.create_show(show)
 
-    return await service.create_show(show)
+    if not created_show:
+        raise HTTPException(status_code=400, detail="This show could not be deleted")
+
+    return created_show
 
 
-@router.delete("/{show_id}")
+@router.delete("/{show_id}", response_model=str)
 async def delete_show(
     show_id: str,
     user=Depends(get_current_user),
@@ -36,7 +36,7 @@ async def delete_show(
     result = await service.delete_show(show_id)
 
     if not result:
-        raise HTTPException(status_code=404, detail="This show could not be deleted")
+        raise HTTPException(status_code=400, detail="This show could not be deleted")
 
     return show_id
 
@@ -59,23 +59,13 @@ async def update_show(
 # Aggregation
 
 
-# async def get_result(stage_list):
-#     shows = await imdb_collection.aggregate(stage_list).to_list(length=None)
-#     result = []
-#     for show in shows:
-#         if show["_id"] == None or show["_id"] == "missing":
-#             del show["_id"]
-#         result.append(show)
-#     return result
-
-
 @router.get(
     "/rating/type/{year}",
     response_description="Returns the average rating for either a certain type of shows or every show in a given year",
 )
 async def year_show_rating(
     year: int,
-    show_type: Optional[str] = "$type",
+    show_type: Optional[str] = None,
     service: ShowService = Depends(ShowService),
 ):
     return await service.get_year_show_rating(year, show_type)

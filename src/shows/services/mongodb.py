@@ -1,8 +1,9 @@
+from fastapi.encoders import jsonable_encoder
 from main import db
-from shows.models import Show, UpdateShowModel
+from shows.models import Shows as Show, UpdateShowModel, BaseShowService
 
 
-class ShowService:
+class ShowService(BaseShowService):
     driver = db.get_collection("imdb_shows")
 
     @classmethod
@@ -12,6 +13,10 @@ class ShowService:
 
     @classmethod
     async def create_show(cls, show: Show):
+        show = jsonable_encoder(
+            show
+        )  # As this show is received as a JSON string, it must be decoded into a python dict first
+
         new_show = await cls.driver.insert_one(show)
         created_show = await cls.driver.find_one({"_id": new_show.inserted_id})
 
@@ -32,7 +37,7 @@ class ShowService:
     ## Aggregation queries
 
     @classmethod
-    async def get_year_show_rating(cls, year: int, show_type: str = None):
+    async def get_year_show_rating(cls, year: int, show_type: str = "$type"):
         # Use the match stage to filter out documents that satisfy the passed in query operation
         # Include a type query in the match stage if a type is specified; else group by type in group stage
         match_stage = (

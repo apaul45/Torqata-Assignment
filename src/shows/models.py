@@ -1,11 +1,13 @@
-from pydantic import BaseModel, Field
+from abc import ABC, abstractmethod
 from typing import Optional, List
-from models import PyObjectId
+
+from pydantic import BaseModel
+from models.mongodb import PyObjectId
+from sqlmodel import Field, SQLModel
 
 
-class Show(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    show_id: str
+class Shows(SQLModel, table=True):
+    show_id: Optional[str] = Field(default=None, primary_key=True)
     position: int
     title: str
     url: str
@@ -32,3 +34,40 @@ class UpdateShowModel(BaseModel):
     votes: Optional[int]
     date: Optional[str]
     genres: Optional[str]
+
+
+class BaseShowService(ABC):
+    @classmethod
+    @abstractmethod
+    def get_all_shows(cls):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def create_show(cls, show: Shows):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def delete_show(cls, show_id: str):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def update_show(cls, show_id: str, show: UpdateShowModel):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_year_show_rating(cls, year: int, show_type: str = None):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_year_statistics(cls, year: int = None):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_director_or_genre_statistics(cls, type: str, value):
+        pass

@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 import os
 
 from fastapi import Depends, APIRouter, HTTPException
-from user.service import Token, UserService
+from user.models import Token
+from user.service import SQLUserService as UserService
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import JWTError, jwt
