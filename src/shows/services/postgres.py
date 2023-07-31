@@ -1,45 +1,62 @@
-from sqlalchemy import delete, select, func, update
+from sqlmodel import delete, select, func, update, Session
 from shows.models import Shows as Show, UpdateShowModel, BaseShowService
-from fastapi_sqlalchemy import db
+from main import pg_engine
+
+
+# Note that functions here are declared async to make them compatible with routes
+# In python, coroutine = function that can stop and wait. Similar to js promises
+# Declaring as async marks them as coroutines that the (async) routes can then await
 
 
 class ShowService(BaseShowService):
+    session = Session(pg_engine)  # Session represents a "holding" zone for transac
     rating_column = func.avg(Show.rating).label("averageRating")
     runtime_column = func.avg(Show.runtime).label("averageRuntime")
 
     @classmethod
     async def get_all_shows(cls):
-        rows = db.session.execute(select(Show))
+        rows = cls.session.execute(select(Show))
         rows = [row["Shows"] for row in rows]
         return rows
 
     @classmethod
     async def create_show(cls, show: Show):
-        db.session.add(show)
-        db.session.commit()
+        try:
+            cls.session.add(show)
+            cls.session.commit()
 
-        return show.show_id if show in db.session else None
+            return show.show_id if show in cls.session else None
+        except:
+            # Rollback if errors out to prevent future requests failing
+            # Rollback is meant to expunge/expire transactions in session
+            cls.session.rollback()
+            return
 
     @classmethod
     async def delete_show(cls, show_id: str) -> bool:
         stmt = delete(Show).where(Show.show_id == show_id)
 
-        db.session.execute(stmt)
-        db.session.commit()
+        cls.session.execute(stmt)
+        cls.session.commit()
 
-        return not db.session.execute(
+        return not cls.session.execute(
             select(Show).where(Show.show_id == show_id)
         ).first()
 
     @classmethod
     async def update_show(cls, show_id: str, show: UpdateShowModel):
-        stmt = update(Show).where(Show.show_id == show_id).values(show)
+        try:
+            stmt = update(Show).where(Show.show_id == show_id).values(show)
 
-        db.session.execute(stmt)
-        db.session.commit()
+            cls.session.execute(stmt)
+            cls.session.commit()
+            return show_id
+        except:
+            cls.session.rollback()
+            return
 
     ## Aggregation Queries
-
+    # Unit of work pattern: pending transactions get flushed from session right before a query
     @classmethod
     async def get_year_show_rating(cls, year: int, show_type: str = None):
         type_condition = Show.type == show_type if show_type else Show.type.is_not(None)
@@ -51,7 +68,7 @@ class ShowService(BaseShowService):
             .group_by(Show.type)
         )
 
-        row = db.session.execute(stmt).all()
+        row = cls.session.execute(stmt).all()
         return row
 
     @classmethod
@@ -65,7 +82,7 @@ class ShowService(BaseShowService):
         condition = Show.year == year if year else Show.year != None
         stmt = select(cols).where(condition).group_by(Show.year)
 
-        rows = db.session.execute(stmt).all()
+        rows = cls.session.execute(stmt).all()
         return rows
 
     @classmethod
@@ -76,5 +93,5 @@ class ShowService(BaseShowService):
           WHERE {type} @> ARRAY['{value}']::varchar[]
         """
 
-        row = db.session.execute(stmt).first()
+        row = cls.session.execute(stmt).first()
         return row

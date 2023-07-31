@@ -15,7 +15,6 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 dnspython = "^2.4.0"
 python-multipart = "^0.0.6"
 python-dotenv = "^1.0.0"
-fastapi-sqlalchemy = "^0.2.1"
 alembic = "^1.11.1"
 psycopg2 = "^2.9.6"
 sqlmodel = "^0.0.8"
