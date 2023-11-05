@@ -1,7 +1,7 @@
 from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Body
 from user.routes import get_current_user
-from shows.services.postgres import ShowService
+from shows.services.mongodb import ShowService
 from shows.models import Shows as Show, UpdateShowModel
 
 router = APIRouter(tags=["shows"])

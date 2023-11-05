@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv # Will look for .env file, if not found then vars in host env
 from sqlmodel import create_engine
 
 app = FastAPI()
